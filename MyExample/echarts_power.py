@@ -51,7 +51,7 @@ for line in lines:
         TimeBattery.append(dtime)
         LEVEL.append(level)
         VOLTAGE.append(voltage)
-        TEMP.append(temp)
+        TEMP.append(temp / 10.0)
         continue
 
     match_obj = re.search(pattern_screen, line)
@@ -61,6 +61,8 @@ for line in lines:
         screen = int(match_obj.group(2))
         #print(dtime, screen)
         TimeScreen.append(dtime)
+        if screen == 2:
+            screen = 1
         ScreenOnOff.append(screen)
         continue
     
@@ -97,10 +99,11 @@ print("Start Time: ",TimeBattery[0], (TimeBattery[0] - BaseDateTime).total_secon
 print("End Time: ",TimeBattery[-1], (TimeBattery[-1] - BaseDateTime).total_seconds()) 
 print(Ratio)
 
+colorList = ['#4f81bd', '#c0504d', '#9bbb59', '#604a7b', '#948a54', '#e46c0b'];
 grid = (
         Grid(
                 init_opts=opts.InitOpts(
-                        theme = ThemeType.LIGHT,
+                        #theme = ThemeType.DARK,
                         width = "1080px",
                         height = "2000px",
                 )
@@ -108,15 +111,19 @@ grid = (
         )
 
 line_batteryInfo = (
-    Line(init_opts=opts.InitOpts(theme=ThemeType.LIGHT))
+    Line()
     .add_xaxis(TimeBattery)
     .add_yaxis("Level", 
                LEVEL,
+               xaxis_index=1,
+               #symbol="none",
                label_opts=opts.LabelOpts(is_show=False),#默认显示Y轴的值在曲线上，设置为False清除这个设置
               )
     .add_yaxis("Temperature",
                TEMP,
-              label_opts=opts.LabelOpts(is_show=False),)
+               xaxis_index=1,
+               symbol = "none",
+               label_opts=opts.LabelOpts(is_show=False),)
     .set_global_opts(
         #title_opts=opts.TitleOpts(title="MyPowerEchart", subtitle="^_^"),
         legend_opts=opts.LegendOpts(orient="vertical", pos_right="0px", pos_top="50px"),
@@ -161,11 +168,13 @@ line_batteryInfo = (
 )
 
 line_screenOnOff = (
-    Line(init_opts=opts.InitOpts(theme=ThemeType.LIGHT))
+    Line()
     .add_xaxis(TimeScreen)
     .add_yaxis("ScreenOnOff", 
                ScreenOnOff,
-               is_step = True,
+               is_step = "end",
+               symbol = "none",
+               areastyle_opts=opts.AreaStyleOpts(opacity=1),
                label_opts=opts.LabelOpts(is_show=False),#默认显示Y轴的值在曲线上，设置为False清除这个设置
               )   
     .set_global_opts(
@@ -174,36 +183,42 @@ line_screenOnOff = (
         xaxis_opts=opts.AxisOpts(
             type_="time",
             name="Time",
+            is_show=False, # dont show x axis
             min_=MIN_DATETIME,
             max_=MAX_DATETIME,
         ),
         yaxis_opts=opts.AxisOpts(
             name="",
-            splitline_opts=opts.SplitLineOpts(is_show=True)
+            is_show=False, # dont show y axis
+            splitline_opts=opts.SplitLineOpts(is_show=False)
         ),
     )
 )
         
 line_chgType = (
-    Line(init_opts=opts.InitOpts(theme=ThemeType.LIGHT))
-    .add_xaxis(TimeScreen)
+    Line()
+    .add_xaxis(TimeCharge)
     .add_yaxis("ChgType", 
-               ScreenOnOff,
-               is_step = True,
+               ChargeType,
+               is_step = "end",
+               symbol = "none",
+               areastyle_opts=opts.AreaStyleOpts(opacity=1),
                label_opts=opts.LabelOpts(is_show=False),#默认显示Y轴的值在曲线上，设置为False清除这个设置
               )   
     .set_global_opts(
         #title_opts=opts.TitleOpts(title="MyPowerEchart", subtitle="^_^"),
-        legend_opts=opts.LegendOpts(orient="vertical", pos_right="0px", pos_top="550px"),
+        legend_opts=opts.LegendOpts(orient="vertical", pos_right="0px", pos_top="430px"),
         xaxis_opts=opts.AxisOpts(
             type_="time",
             name="Time",
+            is_show=False, # dont show x axis
             min_=MIN_DATETIME,
             max_=MAX_DATETIME,
         ),
         yaxis_opts=opts.AxisOpts(
             name="",
-            splitline_opts=opts.SplitLineOpts(is_show=True)
+            is_show=False, # dont show y axis
+            splitline_opts=opts.SplitLineOpts(is_show=False)
         ),
     )
 )
@@ -211,9 +226,9 @@ line_chgType = (
 grid.add(line_batteryInfo,
          grid_opts=opts.GridOpts(pos_left="10%", pos_right="10%", pos_top="50px",  height="300px"),) #000px-350px
 grid.add(line_screenOnOff,
-         grid_opts=opts.GridOpts(pos_left="10%", pos_right="10%", pos_top="400px", height="100px"),) #400px-500px
+         grid_opts=opts.GridOpts(pos_left="10%", pos_right="10%", pos_top="400px", height="20px"),) #400px-500px
 grid.add(line_chgType,
-         grid_opts=opts.GridOpts(pos_left="10%", pos_right="10%", pos_top="550px", height="100px"),) #400px-500px
+         grid_opts=opts.GridOpts(pos_left="10%", pos_right="10%", pos_top="430px", height="20px"),) #400px-500px
 
 html_saved = r"echarts_power.html"
 grid.render(path=html_saved)
